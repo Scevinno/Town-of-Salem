@@ -1,0 +1,424 @@
+
+#header {
+  width: 100%;
+  background: black;
+  color: white;
+  font-family: 'Rye', cursive;
+  font-size: 28px;
+  text-align: center;
+  padding: 10px 0 5px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+}
+
+#header-title {
+  font-size: 28px;
+}
+
+#header-status {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+/* Push app content below header */
+#app {
+  padding-top: 70px;
+}
+
+.login-screen {
+  max-width: 400px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;          /* NEW: adds breathing room */
+  box-sizing: border-box; /* ensures padding doesn't break layout */
+}
+
+input, select, button {
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  background: #4caf50;
+  color: white;
+  cursor: pointer;
+}
+
+.menu-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.menu-buttons button {
+  width: 48%;
+  padding: 20px;
+  font-size: 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+#charactersBtn {
+  background: #3b82f6; /* blue */
+  color: white;
+}
+
+#lobbyBtn {
+  background: #22c55e; /* green */
+  color: white;
+}
+
+/* Background image */
+body {
+  background: url('https://kvlvfrnrudvdhmdombfz.supabase.co/storage/v1/object/public/Town%20of%20Salem%20Files/42.png') center/cover no-repeat fixed;
+  background-color: #000;
+  color: white;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Transparent overlay */
+.character-home {
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.55);
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Search bar */
+#searchBar {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  margin-bottom: 15px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* Character grid */
+.character-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding-bottom: 120px; /* space for bottom button */
+}
+
+/* Character card */
+.character-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: center;
+  padding-bottom: 10px;
+}
+
+/* Character image (square) */
+.character-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+/* Name + faction */
+.character-card h3 {
+  margin: 8x 0 2px 0;
+  font-size: 16px;
+}
+
+.character-card p {
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.bottom-action-btn {
+  width: 100%;
+  padding: 18px;
+  font-size: 18px;
+  background: #22c55e;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  margin-top: 12px;
+  box-sizing: border-box;
+  position: static; /* important: no fixed positioning */
+}
+
+/* Character detail screen */
+.character-detail {
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.55);
+  min-height: 100vh;
+  padding: 20px;
+  color: white;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.character-detail-content {
+  flex: 1 0 auto;
+}
+
+.detail-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.character-detail img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.detail-section-title {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Faction colours */
+.faction-town { color: #4ade80; }     /* green */
+.faction-mafia { color: #ef4444; }    /* red */
+.faction-coven { color: #a855f7; }    /* purple */
+.faction-neutral { color: #93c5fd; }  /* light blue-gray */
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.player-icon {
+  display: flex;
+  align-items: center;
+}
+
+.selected-visit-1 {
+  background:#3b82f6 !important; /* blue */
+}
+
+.selected-visit-2 {
+  background:#1d4ed8 !important; /* dark blue */
+}
+
+.skull-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.inactive-player {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
+.inactive-player .player-row {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
+.edit-field {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0 20px 0;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.edit-field select,
+select.edit-field {
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+}
+
+.edit-field option {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+}
+
+textarea.edit-field {
+  height: 140px;
+  resize: vertical;
+}
+
+.edit-label {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-top: 10px;
+  display: block;
+}
+
+.character-detail h1 {
+  font-family: 'Rye', cursive;
+  font-size: 32px;
+  margin: 10px 0 0 0;
+}
+
+.character-detail h2 {
+  font-size: 18px;
+  font-style: italic;
+  margin: 4px 0 20px 0;
+}
+
+.character-detail h4 {
+  font-size: 20px;
+  margin-top: 25px;
+  margin-bottom: 8px;
+}
+
+.character-detail p {
+  line-height: 1.5;
+  font-size: 16px;
+}
+
+.rich-text ul {
+  padding-left: 20px;
+}
+
+.rich-text li {
+  margin-bottom: 6px;
+}
+
+.lobby-screen {
+  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.55);
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.game-card {
+  background: rgba(255,255,255,0.08);
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.game-card h3 {
+  margin: 0 0 5px 0;
+  font-size: 20px;
+}
+
+.qr-wrapper img {
+  width: 120px;
+  height: 120px;
+  opacity: 0.9;
+  display: block;
+  margin: 10px auto;
+}
+
+.terminate-btn {
+  width: 100%;
+  padding: 12px;
+  background: #ef4444;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.night-table-grid {
+  margin-top: 10px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.night-row-header,
+.night-row-actions {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.night-cell {
+  padding: 4px 6px;
+  text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.2);
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.night-row-header .night-cell {
+  font-weight: bold;
+}
+
+.night-row-header .night-cell:first-child,
+.night-row-actions .night-cell:first-child {
+  border-left: none;
+}
+
+.night-row-header .night-cell {
+  border-top: none;
+}
+
+.night-target {
+  flex: 1;
+}
+
+.selected-visit {
+  background: #3b82f6 !important;
+  color: white !important;
+  border: 2px solid #1e40af !important;
+}
+
+.inactive-player {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skull-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.rich-text span.red { color: #ef4444; }
+.rich-text span.green { color: #4ade80; }
+.rich-text span.purple { color: #a855f7; }
+.rich-text span.blue { color: #93c5fd; }
+

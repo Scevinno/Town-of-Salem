@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rye&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Town of Salem</title>
+
+    <!-- Link to CSS -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- iOS PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+</head>
+<body>
+    <div id="header">
+        <div id="header-title">Town of Salem</div>
+        <div id="header-status"></div>
+    </div>
+    <div id="app" class="login-screen">
+
+    <label>Username</label>
+    <input id="username" type="text" placeholder="Enter your name">
+
+    <label>Access</label>
+    <select id="role">
+        <option value="player">Player</option>
+        <option value="admin">Admin</option>
+    </select>
+
+    <button id="continueBtn">Continue</button>
+    </div>
+
+    <!-- App logic -->
+    <script src="app.js"></script>
+
+</body>
+</html>
