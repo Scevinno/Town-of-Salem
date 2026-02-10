@@ -1754,6 +1754,12 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
     return true;
   }
 
+    // Vigilante
+    if (roleName === "Vigilante") {
+      if (myActionsAll.length >= 1) return false;
+      return true;
+    }
+
   // Retributionist
   if (roleName === "Retributionist") {
     if (target.is_alive) return false;
@@ -1977,4 +1983,5 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
