@@ -1788,7 +1788,19 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
   }
 
   // Seer
-  if (roleName === "Seer" && target.id === me.id) return false;
+  if (roleName === "Seer") {
+  
+    // Cannot self-target
+    if (target.id === me.id) return false;
+  
+    // Cannot target revealed roles
+    if (target.is_revealed) return false;
+  
+    // Cannot target Jailor
+    if (target.characters?.role === "Jailor") return false;
+  
+    return true;
+  }
 
   // Witch (updated)
   if (roleName === "Witch") {
@@ -1965,3 +1977,4 @@ window.addEventListener("load", () => {
   }
 
 });
+
