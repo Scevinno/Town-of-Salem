@@ -1774,6 +1774,7 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
   // Mayor & Prosecutor: self-visit once per game → reveal next day
   if (roleName === "Mayor" || roleName === "Prosecutor") {
     // Cannot visit others
+    if (nightNumber === 1) return false;
     if (target.id !== me.id) return false;
 
     // Cannot self-visit more than once
@@ -1962,4 +1963,5 @@ window.addEventListener("load", () => {
   if (username && role) {
     loadCharacterHome();
   }
+
 });
