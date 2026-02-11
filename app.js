@@ -648,6 +648,32 @@ async function togglePlayerActive(playerId, makeActive) {
   }
 }
 
+async function adminChangeRole(playerId, newCharacterId) {
+  if (!newCharacterId) return;
+
+  const { error } = await client
+    .from("players")
+    .update({ character_id: newCharacterId })
+    .eq("id", playerId);
+
+  if (error) {
+    alert("Failed to change role.");
+    console.error(error);
+    return;
+  }
+
+  // Reload admin view
+  const { data: player, error: pErr } = await client
+    .from("players")
+    .select("lobby_id")
+    .eq("id", playerId)
+    .single();
+
+  if (!pErr && player) {
+    launchGame(player.lobby_id);
+  }
+}
+
 async function goToNight(lobbyId) {
   const { data: lobby, error } = await client
     .from("lobbies")
@@ -804,6 +830,16 @@ function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, pla
           onclick="togglePlayerActive('${player.id}', ${isInactive})">
           ${isInactive ? "Reactivate" : "Deactivate"}
         </button>
+
+        <!-- NEW: Change Role Dropdown -->
+        <select class="edit-field"
+                style="margin-top:10px;width:100%;"
+                onchange="adminChangeRole('${player.id}', this.value)">
+          <option value="">Change role...</option>
+          ${window.allCharacters
+            .map(ch => `<option value="${ch.id}">${ch.name}</option>`)
+            .join("")}
+        </select>
       ` : ""}
 
     </div>
@@ -1983,6 +2019,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
