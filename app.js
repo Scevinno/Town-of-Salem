@@ -131,7 +131,7 @@ function renderCharacterList(characters) {
 
   list.innerHTML = characters.map(c => `
     <div class="character-card" onclick="openCharacterDetail('${c.id}')">
-      <img src="${c.image_url}" alt="${c.name}">
+      <img loading="lazy" src="${c.image_url}" alt="${c.name}">
       <h3>${c.name}</h3>
       <p class="faction-${c.faction.toLowerCase()}">${c.faction} ${c.type}</p>
     </div>
@@ -2019,6 +2019,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
