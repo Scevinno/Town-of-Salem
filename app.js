@@ -1578,6 +1578,18 @@ async function selectNightTarget(targetId) {
     return;
   }
 
+  // Unified restriction check
+  const allowed = roleRestrictions(
+    roleName,
+    nightNumber,
+    target,
+    me,
+    players,
+    existing
+  );
+  
+  if (!allowed) return;
+
   const existingForTarget = existing.find(a => a.target_player_id === targetId);
 
   // Deselect if already selected
@@ -1639,61 +1651,6 @@ async function selectNightTarget(targetId) {
   const targetFaction = getFaction(target);
   const myFaction = getFaction(me);
 
-  // Disguiser: first = Mafia (can be self), second = non-Mafia
-  if (roleName === "Disguiser") {
-    if (!firstVisit && targetFaction !== "Mafia") return;
-    if (firstVisit && targetFaction === "Mafia") return;
-    if (firstVisit && firstVisit.target_player_id === targetId) return;
-  }
-
-  // Necromancer: first = dead, second = non-Coven alive
-  if (roleName === "Necromancer") {
-    if (!firstVisit) {
-      if (target.is_alive) return;
-    } else {
-      if (!target.is_alive) return;
-      if (firstVisit.target_player_id === targetId) return;
-    }
-  }
-
-  // Seer: two different, cannot self
-  if (roleName === "Seer") {
-    if (target.id === me.id) return;
-    if (firstVisit && firstVisit.target_player_id === targetId) return;
-  }
-
-  // Witch: two different, cannot self or Coven
-  if (roleName === "Witch") {
-    if (target.id === me.id) return;
-    if (targetFaction === "Coven") return;
-    if (firstVisit && firstVisit.target_player_id === targetId) return;
-  }
-
-  // Transporter: two different, first can be self
-  if (roleName === "Transporter") {
-    if (firstVisit && firstVisit.target_player_id === targetId) return;
-  }
-
-  // Doctor: self-visit once per game
-  if (roleName === "Doctor") {
-    // Cannot self-visit more than once
-    const selfUses = existing.filter(a => a.target_player_id === me.id).length;
-    if (selfUses >= 1) return;
-  }
-
-  // Mayor & Prosecutor: self-visit once per game
-  if (roleName === "Mayor" || roleName === "Prosecutor") {
-    // Must target self
-    if (target.id !== me.id) return;
-
-    // Cannot self-visit more than once
-    const selfUses = existing.filter(a => a.target_player_id === me.id).length;
-    if (selfUses >= 1) return;
-
-    // Cannot self-visit after reveal
-    if (me.is_revealed) return;
-  }
-
   const { error: insErr } = await client
     .from("night_actions")
     .insert([{
@@ -1742,10 +1699,12 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
   const myFaction = getFaction(me);
   const targetFaction = getFaction(target);
 
+  const myActionsAll = nightActions.filter(a => a.player_id === me.id);
+  const firstVisit = myActionsAll.find(a => a.visit_index === 0);
+
+  // Roles that cannot act at all
   const noVisit = ["Covenite", "Spy", "Executioner", "Jester"];
   if (noVisit.includes(roleName)) return false;
-
-  const myActionsAll = nightActions.filter(a => a.player_id === me.id);
 
   // --- SPECIAL ROLES FIRST ---
 
@@ -1772,16 +1731,11 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
 
   // Doctor
   if (roleName === "Doctor") {
-
-    // Cannot target revealed Mayor/Prosecutor
     if (target.is_revealed) return false;
-
-    // Self-heal only once
     if (target.id === me.id) {
       const selfUses = myActionsAll.filter(a => a.target_player_id === me.id).length;
       if (selfUses >= 1) return false;
     }
-
     return true;
   }
 
@@ -1797,11 +1751,11 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
     return true;
   }
 
-    // Vigilante
-    if (roleName === "Vigilante") {
-      if (myActionsAll.length >= 1) return false;
-      return true;
-    }
+  // Vigilante
+  if (roleName === "Vigilante") {
+    if (myActionsAll.length >= 1) return false;
+    return true;
+  }
 
   // Retributionist
   if (roleName === "Retributionist") {
@@ -1810,50 +1764,40 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
     return true;
   }
 
-  // Cultist: N2+, alive non-Coven, cannot self, ability consumed only after success
+  // Cultist
   if (roleName === "Cultist") {
     if (nightNumber < 2) return false;
     if (!target.is_alive) return false;
     if (targetFaction === "Coven") return false;
     if (target.id === me.id) return false;
-    if (me.cultist_used) return false;   // <-- FIXED
+    if (me.cultist_used) return false;
     return true;
   }
 
-  // Mayor & Prosecutor: self-visit once per game → reveal next day
+  // Mayor & Prosecutor
   if (roleName === "Mayor" || roleName === "Prosecutor") {
-    // Cannot visit others
     if (nightNumber === 1) return false;
     if (target.id !== me.id) return false;
 
-    // Cannot self-visit more than once
     const selfUses = myActionsAll.filter(a => a.target_player_id === me.id).length;
     if (selfUses >= 1) return false;
 
-    // Cannot self-visit after reveal
     if (me.is_revealed) return false;
 
     return true;
   }
 
-  // Seer
+  // Seer (merged logic)
   if (roleName === "Seer") {
-  
-    // Cannot self-target
     if (target.id === me.id) return false;
-  
-    // Cannot target revealed roles
     if (target.is_revealed) return false;
-  
-    // Cannot target Jailor
     if (target.characters?.role === "Jailor") return false;
-  
+    if (firstVisit && firstVisit.target_player_id === target.id) return false;
     return true;
   }
 
-  // Witch (updated)
+  // Witch (merged logic)
   if (roleName === "Witch") {
-    const firstVisit = myActionsAll.find(a => a.visit_index === 0);
     if (target.id === me.id) return false;
 
     if (!firstVisit) {
@@ -1864,14 +1808,30 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
     return true;
   }
 
-  // Transporter
-  if (roleName === "Transporter") return true;
+  // Transporter (merged logic)
+  if (roleName === "Transporter") {
+    if (firstVisit && firstVisit.target_player_id === target.id) return false;
+    return true;
+  }
 
-  // Disguiser
-  if (roleName === "Disguiser") return true;
+  // Disguiser (merged logic)
+  if (roleName === "Disguiser") {
+    if (!firstVisit && targetFaction !== "Mafia") return false;
+    if (firstVisit && targetFaction === "Mafia") return false;
+    if (firstVisit && firstVisit.target_player_id === target.id) return false;
+    return true;
+  }
 
-  // Necromancer
-  if (roleName === "Necromancer") return true;
+  // Necromancer (merged logic)
+  if (roleName === "Necromancer") {
+    if (!firstVisit) {
+      if (target.is_alive) return false;
+    } else {
+      if (!target.is_alive) return false;
+      if (firstVisit.target_player_id === target.id) return false;
+    }
+    return true;
+  }
 
   // Mafia roles
   const mafiaRoles = ["Godfather", "Mafioso", "Framer", "Bootlegger", "Consigliere", "Hypnotist"];
@@ -1893,7 +1853,7 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
   // Arsonist
   if (roleName === "Arsonist") return true;
 
-  // --- DEFAULT SELF-VISIT RULE ---
+  // Default self-target rule
   if (target.id === me.id) {
     const allowedSelf = ["Transporter", "Arsonist"];
     if (!allowedSelf.includes(roleName)) return false;
@@ -2026,6 +1986,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
