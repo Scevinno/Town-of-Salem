@@ -1674,6 +1674,13 @@ async function selectNightTarget(targetId) {
     if (firstVisit && firstVisit.target_player_id === targetId) return;
   }
 
+  // Doctor: self-visit once per game
+  if (roleName === "Doctor") {
+    // Cannot self-visit more than once
+    const selfUses = existing.filter(a => a.target_player_id === me.id).length;
+    if (selfUses >= 1) return;
+  }
+
   // Mayor & Prosecutor: self-visit once per game
   if (roleName === "Mayor" || roleName === "Prosecutor") {
     // Must target self
@@ -2019,6 +2026,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
