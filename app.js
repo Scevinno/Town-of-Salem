@@ -1674,7 +1674,10 @@ async function selectNightTarget(targetId) {
     .eq("night_number", nightNumber)
     .order("visit_index", { ascending: true });
 
-  if (!finalErr) highlightNightSelectionWithActions(finalActions || []);
+  if (!finalErr) {
+  window.nightActions = finalActions;   // <-- FIX
+  highlightNightSelectionWithActions(finalActions || []);
+  }
 }
 
 function canVisit(roleName) {
@@ -1986,6 +1989,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
