@@ -79,7 +79,7 @@ button {
 
 /* Background image */
 body {
-  background: url('https://kvlvfrnrudvdhmdombfz.supabase.co/storage/v1/object/public/Town%20of%20Salem%20Files/42.png') center/cover no-repeat fixed;
+  background: url('https://kvlvfrnrudvdhmdombfz.supabase.co/storage/v1/object/public/Town%20of%20Salem%20Files/non.webp') center/cover no-repeat fixed;
   background-color: #000;
   color: white;
   font-family: Arial, sans-serif;
@@ -421,4 +421,5 @@ textarea.edit-field {
 .rich-text span.green { color: #4ade80; }
 .rich-text span.purple { color: #a855f7; }
 .rich-text span.blue { color: #93c5fd; }
+
 
