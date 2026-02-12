@@ -1464,6 +1464,7 @@ function highlightNightSelectionWithActions(actions) {
 }
 
 async function renderPlayerNight(lobby, player) {
+  // Load all players
   const { data: players, error } = await client
     .from("players")
     .select("id, username, is_revealed, is_active, is_alive, cultist_used, character_id, characters(*)")
@@ -1487,11 +1488,12 @@ async function renderPlayerNight(lobby, player) {
   const myRole = me.characters;
   const roleName = myRole.name;
 
+  // FIX: Load ALL actions for THIS PLAYER across ALL nights
   const { data: nightActions, error: naErr } = await client
     .from("night_actions")
     .select("*")
     .eq("lobby_id", lobby.id)
-    .eq("night_number", lobby.night_number);
+    .eq("player_id", me.id);   // <-- FIXED: remove night_number filter
 
   if (naErr || !nightActions) {
     console.error("Failed to load night actions:", naErr);
@@ -1513,7 +1515,16 @@ async function renderPlayerNight(lobby, player) {
 
         <div class="games-list">
           ${players.map((p, idx) =>
-            renderPlayerNightCardForPlayer(p, idx + 1, me, myRole, lobby, roleName, players, nightActions)
+            renderPlayerNightCardForPlayer(
+              p,
+              idx + 1,
+              me,
+              myRole,
+              lobby,
+              roleName,
+              players,
+              nightActions   // <-- now contains ALL actions
+            )
           ).join("")}
         </div>
       </div>
@@ -1525,7 +1536,7 @@ async function renderPlayerNight(lobby, player) {
     </div>
   `;
 
-  // highlight existing selections for this night
+  // highlight only THIS NIGHT's actions
   const myActionsThisNight = (nightActions || []).filter(a =>
     a.player_id === me.id && a.night_number === lobby.night_number
   );
@@ -1989,6 +2000,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
