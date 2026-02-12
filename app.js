@@ -123,7 +123,7 @@ async function loadCharactersFromDB() {
   }
 
   window.allCharacters = data;
-  renderCharacterList(data);
+  renderVirtualisedCharacterList(data);
 }
 
 function renderCharacterList(characters) {
@@ -138,6 +138,93 @@ function renderCharacterList(characters) {
   `).join("");
 }
 
+function renderVirtualisedCharacterList(characters) {
+  const container = document.getElementById("characterList");
+  container.innerHTML = ""; // clear existing
+
+  // Create scroll container
+  const scroller = document.createElement("div");
+  scroller.style.position = "relative";
+  scroller.style.width = "100%";
+  scroller.style.minHeight = "100vh";
+  scroller.style.overflowY = "auto";
+  scroller.style.paddingBottom = "20px";
+  container.appendChild(scroller);
+
+  // Temporary card to measure height
+  const temp = document.createElement("div");
+  temp.className = "character-card";
+  temp.style.visibility = "hidden";
+  temp.innerHTML = `
+    <img loading="lazy" src="${characters[0]?.image_url || ""}">
+    <h3>${characters[0]?.name || ""}</h3>
+    <p>${characters[0]?.faction || ""} ${characters[0]?.type || ""}</p>
+  `;
+  scroller.appendChild(temp);
+
+  requestAnimationFrame(() => {
+    const cardHeight = temp.offsetHeight || 200;
+    temp.remove();
+
+    const viewportHeight = window.innerHeight;
+    const buffer = 6; // extra cards above/below
+    const cardsPerScreen = Math.ceil(viewportHeight / cardHeight) + buffer;
+
+    // Spacer simulates full height
+    const spacer = document.createElement("div");
+    spacer.style.height = `${characters.length * cardHeight}px`;
+    scroller.appendChild(spacer);
+
+    // Pool of reusable card elements
+    const pool = [];
+    for (let i = 0; i < cardsPerScreen; i++) {
+      const card = document.createElement("div");
+      card.className = "character-card";
+      card.style.position = "absolute";
+      card.style.width = "100%";
+      card.dataset.index = -1;
+      scroller.appendChild(card);
+      pool.push(card);
+    }
+
+    function renderCard(card, index) {
+      const c = characters[index];
+      card.dataset.index = index;
+      card.style.top = `${index * cardHeight}px`;
+      card.innerHTML = `
+        <img loading="lazy" src="${c.image_url}" alt="${c.name}">
+        <h3>${c.name}</h3>
+        <p class="faction-${c.faction.toLowerCase()}">${c.faction} ${c.type}</p>
+      `;
+      card.onclick = () => openCharacterDetail(c.id);
+    }
+
+    function updateVisibleCards() {
+      const scrollTop = scroller.scrollTop;
+      const startIndex = Math.floor(scrollTop / cardHeight);
+      const endIndex = Math.min(
+        characters.length - 1,
+        startIndex + cardsPerScreen
+      );
+
+      let poolPtr = 0;
+      for (let i = startIndex; i <= endIndex; i++) {
+        const card = pool[poolPtr++];
+        renderCard(card, i);
+      }
+
+      // Hide unused cards
+      for (; poolPtr < pool.length; poolPtr++) {
+        pool[poolPtr].dataset.index = -1;
+        pool[poolPtr].innerHTML = "";
+      }
+    }
+
+    scroller.addEventListener("scroll", updateVisibleCards);
+    updateVisibleCards();
+  });
+}
+
 function filterCharacters() {
   const query = document.getElementById("searchBar").value.toLowerCase();
 
@@ -147,7 +234,7 @@ function filterCharacters() {
     c.faction.toLowerCase().includes(query)
   );
 
-  renderCharacterList(filtered);
+  renderVirtualisedCharacterList(filtered);
 }
 
 function openCharacterDetail(id) {
@@ -2019,6 +2106,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
