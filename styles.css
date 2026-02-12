@@ -79,13 +79,21 @@ button {
 
 /* Background image */
 body {
-  background: url('https://kvlvfrnrudvdhmdombfz.supabase.co/storage/v1/object/public/Town%20of%20Salem%20Files/non.webp') center/cover no-repeat fixed;
+  background: url('https://kvlvfrnrudvdhmdombfz.supabase.co/storage/v1/object/public/Town%20of%20Salem%20Files/non.webp')
+              center/cover
+              no-repeat;
   background-color: #000;
-  background-attachment: scroll; /* important */
   color: white;
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
+}
+
+/* Mobile fix: prevent iOS Safari from shrinking/stretching the background */
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll; /* critical fix */
+  }
 }
 
 /* Transparent overlay */
@@ -422,6 +430,7 @@ textarea.edit-field {
 .rich-text span.green { color: #4ade80; }
 .rich-text span.purple { color: #a855f7; }
 .rich-text span.blue { color: #93c5fd; }
+
 
 
 
