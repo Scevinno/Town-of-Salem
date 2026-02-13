@@ -54,16 +54,15 @@ async function loadCharacterHome() {
   // If cached, restore instantly
   if (window.screenCache["characterHome"]) {
     document.getElementById("app").innerHTML = window.screenCache["characterHome"];
-  
-    // Restore scroll position on the actual scrolling container
+
+    // Restore scroll position
     const container = document.querySelector(".character-home");
     const y = window.scrollMemory["characterHome"] || 0;
-  
     requestAnimationFrame(() => {
       if (container) container.scrollTop = y;
     });
-  
-    return;
+
+    return; // IMPORTANT: do NOT reload characters
   }
 
   const role = localStorage.getItem("role");
@@ -125,7 +124,7 @@ async function loadCharacterHome() {
 
   document.getElementById("logoutBtn").addEventListener("click", logout);
 
-  // Load characters from DB
+  // Load characters from DB (ONLY on first load)
   await loadCharactersFromDB();
 
   // Save final rendered screen to cache
@@ -2046,6 +2045,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
