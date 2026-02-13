@@ -5,6 +5,7 @@ const SKULL_URL = "https://kvlvfrnrudvdhmdombfz.supabase.co/storage/v1/object/pu
 
 // Create client (IMPORTANT: do NOT name this variable 'supabase')
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+window.screenCache = {};
 
 // Test connection
 async function testConnection() {
@@ -49,12 +50,19 @@ document.getElementById("continueBtn").addEventListener("click", () => {
 })();
 
 async function loadCharacterHome() {
+  // If cached, restore instantly
+  if (window.screenCache["characterHome"]) {
+    document.getElementById("app").innerHTML = window.screenCache["characterHome"];
+    return;
+  }
+
   const role = localStorage.getItem("role");
 
   // Update header status
   document.getElementById("header-status").innerHTML =
     `<b>${localStorage.getItem("username")}</b>, you are logged in as ${localStorage.getItem("role")}`;
 
+  // Render fresh HTML
   document.getElementById("app").innerHTML = `
     <div class="character-home">
 
@@ -81,6 +89,7 @@ async function loadCharacterHome() {
     </div>
   `;
 
+  // Attach listeners
   document.getElementById("searchBar").addEventListener("input", filterCharacters);
 
   document.getElementById("actionBtn").addEventListener("click", () => {
@@ -90,22 +99,27 @@ async function loadCharacterHome() {
       const playerId = localStorage.getItem("playerId");
 
       if (activeLobby && playerId) {
-        // Player is already in a game → skip code/QR
         enterPlayerGame(activeLobby);
       } else {
-        // Player not in a game → show Join Game screen
         loadJoinGame();
       }
     }
   });
 
   if (role === "admin") {
-    document.getElementById("addCharacterBtn").addEventListener("click", () => openCharacterForm());
+    document.getElementById("addCharacterBtn").addEventListener("click", () => {
+      delete window.screenCache["characterHome"]; // invalidate cache
+      openCharacterForm();
+    });
   }
 
   document.getElementById("logoutBtn").addEventListener("click", logout);
 
-  loadCharactersFromDB();
+  // Load characters from DB
+  await loadCharactersFromDB();
+
+  // Save final rendered screen to cache
+  window.screenCache["characterHome"] = document.getElementById("app").innerHTML;
 }
 
 async function loadCharactersFromDB() {
@@ -154,6 +168,12 @@ function openCharacterDetail(id) {
   const c = window.allCharacters.find(x => x.id == id);
   const role = localStorage.getItem("role");
 
+  // If cached, restore instantly
+  if (window.screenCache[`characterDetail_${id}`]) {
+    document.getElementById("app").innerHTML = window.screenCache[`characterDetail_${id}`];
+    return;
+  }
+
   const factionClass = {
     "Town": "faction-town",
     "Mafia": "faction-mafia",
@@ -161,6 +181,7 @@ function openCharacterDetail(id) {
     "Neutral": "faction-neutral"
   }[c.faction] || "";
 
+  // Render fresh HTML
   document.getElementById("app").innerHTML = `
     <div class="character-detail">
 
@@ -179,7 +200,8 @@ function openCharacterDetail(id) {
 
       <div class="detail-actions">
         ${role === "admin" ? `
-          <button onclick="openCharacterForm('${c.id}')" class="bottom-action-btn" style="background:#3b82f6;">
+          <button onclick="invalidateCharacterDetailCache('${c.id}'); openCharacterForm('${c.id}')" 
+                  class="bottom-action-btn" style="background:#3b82f6;">
             Edit
           </button>
         ` : ""}
@@ -191,6 +213,14 @@ function openCharacterDetail(id) {
 
     </div>
   `;
+
+  // Save to cache
+  window.screenCache[`characterDetail_${id}`] = document.getElementById("app").innerHTML;
+}
+
+function invalidateCharacterDetailCache(id) {
+  delete window.screenCache[`characterDetail_${id}`];
+  delete window.screenCache["characterHome"]; // home must refresh too
 }
 
 function openCharacterForm(id = null) {
@@ -295,7 +325,7 @@ async function saveCharacterForm(id = null) {
     const { error: uploadError } = await client.storage
       .from("Town of Salem Files")
       .upload(filePath, imageFile, {
-        cacheControl: "3600",
+        cacheControl: "2628000",
         upsert: true
       });
 
@@ -2000,6 +2030,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
