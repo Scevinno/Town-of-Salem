@@ -60,18 +60,21 @@ async function loadCharacterHome() {
   // If cached, restore instantly
   if (window.screenCache["characterHome"]) {
     document.getElementById("app").innerHTML = window.screenCache["characterHome"];
-  
+
+    // Reattach all event listeners
+    reattachCharacterHomeListeners();
+
+    // Restore scroll
     const y = window.scrollMemory["characterHome"] || 0;
-  
     requestAnimationFrame(() => {
       document.documentElement.scrollTop = y;
     });
-  
+
     return;
   }
 
   console.log("Cache on loadCharacterHome:", window.screenCache);
-  
+
   const role = localStorage.getItem("role");
 
   // Update header status
@@ -105,31 +108,8 @@ async function loadCharacterHome() {
     </div>
   `;
 
-  // Attach listeners
-  document.getElementById("searchBar").addEventListener("input", filterCharacters);
-
-  document.getElementById("actionBtn").addEventListener("click", () => {
-    if (role === "admin") loadManageGames();
-    else {
-      const activeLobby = localStorage.getItem("activeLobby");
-      const playerId = localStorage.getItem("playerId");
-
-      if (activeLobby && playerId) {
-        enterPlayerGame(activeLobby);
-      } else {
-        loadJoinGame();
-      }
-    }
-  });
-
-  if (role === "admin") {
-    document.getElementById("addCharacterBtn").addEventListener("click", () => {
-      delete window.screenCache["characterHome"]; // invalidate cache
-      openCharacterForm();
-    });
-  }
-
-  document.getElementById("logoutBtn").addEventListener("click", logout);
+  // Attach listeners (ONLY here)
+  reattachCharacterHomeListeners();
 
   // Load characters from DB (ONLY on first load)
   await loadCharactersFromDB();
@@ -241,6 +221,38 @@ function invalidateCharacterDetailCache(id) {
 
 function saveHomeScroll() {
   window.scrollMemory["characterHome"] = document.documentElement.scrollTop || 0;
+}
+
+function reattachCharacterHomeListeners() {
+  const role = localStorage.getItem("role");
+
+  const searchBar = document.getElementById("searchBar");
+  if (searchBar) searchBar.addEventListener("input", filterCharacters);
+
+  const actionBtn = document.getElementById("actionBtn");
+  if (actionBtn) {
+    actionBtn.addEventListener("click", () => {
+      if (role === "admin") loadManageGames();
+      else {
+        const activeLobby = localStorage.getItem("activeLobby");
+        const playerId = localStorage.getItem("playerId");
+
+        if (activeLobby && playerId) enterPlayerGame(activeLobby);
+        else loadJoinGame();
+      }
+    });
+  }
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.addEventListener("click", logout);
+
+  const addCharacterBtn = document.getElementById("addCharacterBtn");
+  if (addCharacterBtn) {
+    addCharacterBtn.addEventListener("click", () => {
+      delete window.screenCache["characterHome"];
+      openCharacterForm();
+    });
+  }
 }
 
 function openCharacterForm(id = null) {
@@ -2050,6 +2062,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
