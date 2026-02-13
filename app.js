@@ -6,6 +6,7 @@ const SKULL_URL = "https://kvlvfrnrudvdhmdombfz.supabase.co/storage/v1/object/pu
 // Create client (IMPORTANT: do NOT name this variable 'supabase')
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 window.screenCache = {};
+window.scrollMemory = {};
 
 // Test connection
 async function testConnection() {
@@ -53,6 +54,11 @@ async function loadCharacterHome() {
   // If cached, restore instantly
   if (window.screenCache["characterHome"]) {
     document.getElementById("app").innerHTML = window.screenCache["characterHome"];
+
+    // Restore scroll position
+    const y = window.scrollMemory["characterHome"] || 0;
+    requestAnimationFrame(() => window.scrollTo(0, y));
+
     return;
   }
 
@@ -200,7 +206,7 @@ function openCharacterDetail(id) {
 
       <div class="detail-actions">
         ${role === "admin" ? `
-          <button onclick="invalidateCharacterDetailCache('${c.id}'); openCharacterForm('${c.id}')" 
+          <button onclick="invalidateCharacterDetailCache('${c.id}'); openCharacterForm('${c.id}')"
                   class="bottom-action-btn" style="background:#3b82f6;">
             Edit
           </button>
@@ -221,6 +227,10 @@ function openCharacterDetail(id) {
 function invalidateCharacterDetailCache(id) {
   delete window.screenCache[`characterDetail_${id}`];
   delete window.screenCache["characterHome"]; // home must refresh too
+}
+
+function saveHomeScroll() {
+  window.scrollMemory["characterHome"] = window.scrollY;
 }
 
 function openCharacterForm(id = null) {
@@ -2030,6 +2040,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
