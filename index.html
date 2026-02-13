@@ -23,29 +23,32 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <!-- IMPORTANT: Load app.js BEFORE #app so globals persist -->
+    <script src="app.js"></script>
 </head>
+
 <body>
     <div id="header">
         <div id="header-title">Town of Salem</div>
         <div id="header-status"></div>
     </div>
+
     <div id="app" class="login-screen">
 
-    <label>Username</label>
-    <input id="username" type="text" placeholder="Enter your name">
+        <label>Username</label>
+        <input id="username" type="text" placeholder="Enter your name">
 
-    <label>Access</label>
-    <select id="role">
-        <option value="player">Player</option>
-        <option value="admin">Admin</option>
-    </select>
+        <label>Access</label>
+        <select id="role">
+            <option value="player">Player</option>
+            <option value="admin">Admin</option>
+        </select>
 
-    <button id="continueBtn">Continue</button>
+        <button id="continueBtn">Continue</button>
     </div>
 
-    <!-- App logic -->
-    <script src="app.js"></script>
-
+    <!-- Service Worker -->
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("service-worker.js")
@@ -54,6 +57,4 @@
     </script>
 
 </body>
-
 </html>
-
