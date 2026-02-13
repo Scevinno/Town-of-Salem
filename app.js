@@ -55,9 +55,12 @@ async function loadCharacterHome() {
   if (window.screenCache["characterHome"]) {
     document.getElementById("app").innerHTML = window.screenCache["characterHome"];
 
-    // Restore scroll position
+    // Restore scroll position on the same container that actually scrolls
+    const container = document.getElementById("app");
     const y = window.scrollMemory["characterHome"] || 0;
-    requestAnimationFrame(() => window.scrollTo(0, y));
+    requestAnimationFrame(() => {
+      if (container) container.scrollTop = y;
+    });
 
     return;
   }
@@ -150,7 +153,7 @@ function renderCharacterList(characters) {
   const list = document.getElementById("characterList");
 
   list.innerHTML = characters.map(c => `
-    <div class="character-card" onclick="openCharacterDetail('${c.id}')">
+    <div class="character-card" onclick="saveHomeScroll(); openCharacterDetail('${c.id}')">
       <img loading="lazy" src="${c.image_url}" alt="${c.name}">
       <h3>${c.name}</h3>
       <p class="faction-${c.faction.toLowerCase()}">${c.faction} ${c.type}</p>
@@ -230,7 +233,9 @@ function invalidateCharacterDetailCache(id) {
 }
 
 function saveHomeScroll() {
-  window.scrollMemory["characterHome"] = window.scrollY;
+  const container = document.getElementById("app");
+  if (!container) return;
+  window.scrollMemory["characterHome"] = container.scrollTop || 0;
 }
 
 function openCharacterForm(id = null) {
@@ -2040,6 +2045,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
