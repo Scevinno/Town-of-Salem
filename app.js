@@ -26,19 +26,24 @@ async function testConnection() {
 testConnection();
 
 // Handle login
-document.getElementById("continueBtn").addEventListener("click", () => {
-  const username = document.getElementById("username").value.trim();
-  const role = document.getElementById("role").value;
+document.addEventListener("DOMContentLoaded", () => {
 
-  if (!username) {
-    alert("Please enter a username");
-    return;
-  }
+    // EVERYTHING that touches the DOM goes inside here.
+    // For example:
 
-  localStorage.setItem("username", username);
-  localStorage.setItem("role", role);
+    const continueBtn = document.getElementById("continueBtn");
+    if (continueBtn) {
+        continueBtn.addEventListener("click", () => {
+            const username = document.getElementById("username").value.trim();
+            const role = document.getElementById("role").value;
+            if (!username) return alert("Enter a username");
 
-  loadCharacterHome();
+            localStorage.setItem("username", username);
+            localStorage.setItem("role", role);
+
+            loadCharacterHome();
+        });
+    }
 });
 
 (function checkQRJoin() {
@@ -2048,6 +2053,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
