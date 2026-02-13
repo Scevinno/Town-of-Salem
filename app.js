@@ -5,6 +5,7 @@ const SKULL_URL = "https://kvlvfrnrudvdhmdombfz.supabase.co/storage/v1/object/pu
 
 // Create client (IMPORTANT: do NOT name this variable 'supabase')
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 window.screenCache = {};
 window.scrollMemory = {};
 
@@ -65,6 +66,8 @@ async function loadCharacterHome() {
     return; // IMPORTANT: do NOT reload characters
   }
 
+  console.log("Cache on loadCharacterHome:", window.screenCache);
+  
   const role = localStorage.getItem("role");
 
   // Update header status
@@ -2045,6 +2048,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
