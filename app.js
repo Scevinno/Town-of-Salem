@@ -54,14 +54,15 @@ async function loadCharacterHome() {
   // If cached, restore instantly
   if (window.screenCache["characterHome"]) {
     document.getElementById("app").innerHTML = window.screenCache["characterHome"];
-
-    // Restore scroll position on the same container that actually scrolls
-    const container = document.getElementById("app");
+  
+    // Restore scroll position on the actual scrolling container
+    const container = document.querySelector(".character-home");
     const y = window.scrollMemory["characterHome"] || 0;
+  
     requestAnimationFrame(() => {
       if (container) container.scrollTop = y;
     });
-
+  
     return;
   }
 
@@ -233,7 +234,7 @@ function invalidateCharacterDetailCache(id) {
 }
 
 function saveHomeScroll() {
-  const container = document.getElementById("app");
+  const container = document.querySelector(".character-home");
   if (!container) return;
   window.scrollMemory["characterHome"] = container.scrollTop || 0;
 }
@@ -2045,6 +2046,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
