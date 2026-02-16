@@ -931,6 +931,7 @@ async function advanceToNextDay(lobbyId) {
   await resolveCultistConversion(lobbyId, nightNumber)
   await resolveMayorProsecutorReveal(lobbyId, nightNumber);
   await resolveTrapperRestrictions(lobbyId, nightNumber);
+  await resolveJailorRestrictions(lobbyId, nightNumber);
 
   if (nextDay > 7) {
     await client.from("lobbies")
@@ -1866,44 +1867,6 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
     return true;
   }
 
-  // Jailor
-  if (roleName === "Jailor") {
-    if (target.id === me.id) return false; // Jailor cannot self-target
-  
-    // Fetch Jailor's full visit history (previous nights)
-    const { data: history, error: histErr } = await client
-      .from("night_actions")
-      .select("night_number, target_player_id")
-      .eq("lobby_id", me.lobby_id)
-      .eq("player_id", me.id)
-      .lt("night_number", nightNumber)
-      .order("night_number", { ascending: true });
-  
-    if (histErr) {
-      console.error("Jailor history fetch failed:", histErr);
-      return false;
-    }
-  
-    // No history → always allowed
-    if (!history || history.length === 0) return true;
-  
-    // Extract last two visits
-    const last = history[history.length - 1];
-    const secondLast = history.length > 1 ? history[history.length - 2] : null;
-  
-    // Case 1: Last two visits were the same target → block third
-    if (
-      last.target_player_id === target.id &&
-      secondLast &&
-      secondLast.target_player_id === target.id
-    ) {
-      return false;
-    }
-  
-    // Otherwise allowed
-    return true;
-  }
-
   // Seer (merged logic)
   if (roleName === "Seer") {
     if (target.id === me.id) return false;
@@ -2032,6 +1995,74 @@ async function resolveCultistConversion(lobbyId, nightNumber) {
       .from("players")
       .update({ cultist_used: true })
       .eq("id", action.player_id);
+  }
+}
+
+async function resolveJailorRestrictions(lobbyId, nightNumber) {
+  // Load all actions up to this night
+  const { data: allActions, error } = await client
+    .from("night_actions")
+    .select(`
+      id,
+      night_number,
+      player_id,
+      target_player_id,
+      actor:player_id (
+        id,
+        characters:character_id (*)
+      )
+    `)
+    .eq("lobby_id", lobbyId)
+    .lte("night_number", nightNumber)
+    .order("night_number", { ascending: true });
+
+  if (error) {
+    console.error("Jailor resolver failed:", error);
+    return;
+  }
+
+  if (!allActions) return;
+
+  // Find all Jailors
+  const jailors = allActions
+    .map(a => a.actor)
+    .filter(a => a && a.characters?.name === "Jailor");
+
+  if (jailors.length === 0) return;
+
+  for (const jailor of jailors) {
+    const jailorId = jailor.id;
+
+    // All actions by this Jailor
+    const myActions = allActions.filter(a => a.player_id === jailorId);
+
+    // Last two visits before this night
+    const history = myActions.filter(a => a.night_number < nightNumber);
+    if (history.length < 2) continue;
+
+    const last = history[history.length - 1];
+    const secondLast = history[history.length - 2];
+
+    // If Jailor visited the same target twice in a row
+    if (
+      last.target_player_id === secondLast.target_player_id
+    ) {
+      const forbiddenTarget = last.target_player_id;
+
+      // If Jailor tries to visit that target again this night → delete illegal action
+      const illegal = allActions.find(a =>
+        a.player_id === jailorId &&
+        a.night_number === nightNumber &&
+        a.target_player_id === forbiddenTarget
+      );
+
+      if (illegal) {
+        await client
+          .from("night_actions")
+          .delete()
+          .eq("id", illegal.id);
+      }
+    }
   }
 }
 
@@ -2176,6 +2207,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
