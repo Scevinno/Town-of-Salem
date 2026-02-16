@@ -930,6 +930,7 @@ async function advanceToNextDay(lobbyId) {
   // --- NIGHT RESOLUTION GOES HERE ---
   await resolveCultistConversion(lobbyId, nightNumber)
   await resolveMayorProsecutorReveal(lobbyId, nightNumber);
+  await resolveTrapperRestrictions(lobbyId, nightNumber);
 
   if (nextDay > 7) {
     await client.from("lobbies")
@@ -1817,6 +1818,8 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
 
   // Trapper
   if (roleName === "Trapper") {
+    if (nightNumber % 2 === 1) return false;
+    if (target.id === me.id) return false;
     if (target.is_revealed) return false;
     return true;
   }
@@ -1860,6 +1863,44 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
 
     if (me.is_revealed) return false;
 
+    return true;
+  }
+
+  // Jailor
+  if (roleName === "Jailor") {
+    if (target.id === me.id) return false; // Jailor cannot self-target
+  
+    // Fetch Jailor's full visit history (previous nights)
+    const { data: history, error: histErr } = await client
+      .from("night_actions")
+      .select("night_number, target_player_id")
+      .eq("lobby_id", me.lobby_id)
+      .eq("player_id", me.id)
+      .lt("night_number", nightNumber)
+      .order("night_number", { ascending: true });
+  
+    if (histErr) {
+      console.error("Jailor history fetch failed:", histErr);
+      return false;
+    }
+  
+    // No history → always allowed
+    if (!history || history.length === 0) return true;
+  
+    // Extract last two visits
+    const last = history[history.length - 1];
+    const secondLast = history.length > 1 ? history[history.length - 2] : null;
+  
+    // Case 1: Last two visits were the same target → block third
+    if (
+      last.target_player_id === target.id &&
+      secondLast &&
+      secondLast.target_player_id === target.id
+    ) {
+      return false;
+    }
+  
+    // Otherwise allowed
     return true;
   }
 
@@ -2035,6 +2076,79 @@ async function resolveMayorProsecutorReveal(lobbyId, nightNumber) {
   }
 }
 
+async function resolveTrapperRestrictions(lobbyId, nightNumber) {
+  // Load ALL actions up to this night
+  const { data: allActions, error } = await client
+    .from("night_actions")
+    .select(`
+      id,
+      night_number,
+      player_id,
+      target_player_id,
+      actor:player_id (
+        id,
+        characters:character_id (*)
+      )
+    `)
+    .eq("lobby_id", lobbyId)
+    .lte("night_number", nightNumber)
+    .order("night_number", { ascending: true });
+
+  if (error) {
+    console.error("Trapper resolver failed:", error);
+    return;
+  }
+
+  if (!allActions) return;
+
+  // Find all Trappers
+  const trappers = allActions
+    .map(a => a.actor)
+    .filter(a => a && a.characters?.name === "Trapper");
+
+  if (trappers.length === 0) return;
+
+  for (const trapper of trappers) {
+    const trapperId = trapper.id;
+
+    // All actions by this trapper
+    const myActions = allActions.filter(a => a.player_id === trapperId);
+
+    // Last action before this night
+    const last = myActions
+      .filter(a => a.night_number < nightNumber)
+      .slice(-1)[0];
+
+    if (!last) continue; // No history → nothing to restrict
+
+    const lastTarget = last.target_player_id;
+
+    // Check if lastTarget was visited by ANYONE ELSE since Trapper's visit
+    const othersVisited = allActions.some(a =>
+      a.target_player_id === lastTarget &&
+      a.player_id !== trapperId &&
+      a.night_number > last.night_number &&
+      a.night_number <= nightNumber
+    );
+
+    // If isolated AND Trapper tried to target them again → remove illegal action
+    if (!othersVisited) {
+      const illegal = allActions.find(a =>
+        a.player_id === trapperId &&
+        a.night_number === nightNumber &&
+        a.target_player_id === lastTarget
+      );
+
+      if (illegal) {
+        await client
+          .from("night_actions")
+          .delete()
+          .eq("id", illegal.id);
+      }
+    }
+  }
+}
+
 async function leaveGame() {
   const ok = confirm("Leave the game?");
   if (!ok) return;
@@ -2062,6 +2176,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
