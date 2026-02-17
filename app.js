@@ -931,7 +931,6 @@ async function advanceToNextDay(lobbyId) {
   await resolveCultistConversion(lobbyId, nightNumber)
   await resolveMayorProsecutorReveal(lobbyId, nightNumber);
   await resolveTrapperRestrictions(lobbyId, nightNumber);
-  await resolveJailorRestrictions(lobbyId, nightNumber);
 
   if (nextDay > 7) {
     await client.from("lobbies")
@@ -1741,6 +1740,8 @@ async function selectNightTarget(targetId) {
     return;
   }
 
+  await resolveJailorRestrictions(lobbyId, nightNumber);
+
   const { data: finalActions, error: finalErr } = await client
     .from("night_actions")
     .select("*")
@@ -2207,6 +2208,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
