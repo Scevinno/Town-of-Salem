@@ -1558,12 +1558,12 @@ async function renderPlayerNight(lobby, player) {
   const myRole = me.characters;
   const roleName = myRole.name;
 
-  // FIX: Load ALL actions for THIS PLAYER across ALL nights
+  // Load ALL actions for THIS PLAYER across ALL nights
   const { data: nightActions, error: naErr } = await client
     .from("night_actions")
     .select("*")
     .eq("lobby_id", lobby.id)
-    .eq("player_id", me.id);   // <-- FIXED: remove night_number filter
+    .eq("player_id", me.id);
 
   if (naErr || !nightActions) {
     console.error("Failed to load night actions:", naErr);
@@ -1593,7 +1593,7 @@ async function renderPlayerNight(lobby, player) {
               lobby,
               roleName,
               players,
-              nightActions   // <-- now contains ALL actions
+              nightActions
             )
           ).join("")}
         </div>
@@ -1611,6 +1611,29 @@ async function renderPlayerNight(lobby, player) {
     a.player_id === me.id && a.night_number === lobby.night_number
   );
   highlightNightSelectionWithActions(myActionsThisNight);
+
+  // --- SYNCED NIGHT TIMER (NEW) ---
+  if (window.playerNightTimerInterval) clearInterval(window.playerNightTimerInterval);
+
+  window.playerNightTimerInterval = setInterval(() => {
+    const el = document.getElementById("night-timer");
+    if (!el) return;
+
+    // If admin hasn't started timer yet
+    if (!window.nightEndsAt) {
+      el.textContent = "Night in progress...";
+      return;
+    }
+
+    const remaining = Math.max(0, Math.floor((window.nightEndsAt - Date.now()) / 1000));
+    el.textContent = `Night in progress... (${remaining}s)`;
+
+    if (remaining <= 0) {
+      clearInterval(window.playerNightTimerInterval);
+      el.textContent = "Resolving...";
+    }
+  }, 200);
+  // --- END TIMER ---
 
   pollPhaseChange(lobby.id, lobby.phase);
 }
@@ -2216,6 +2239,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
