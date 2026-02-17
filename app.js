@@ -776,7 +776,11 @@ async function goToNight(lobbyId) {
 
 async function renderNightPhase(lobby, players) {
   const night = lobby.night_number || 1;
-  let remaining = 60;
+
+  // If timer not started yet, set the end time
+  if (!window.nightEndsAt) {
+    window.nightEndsAt = Date.now() + 30000; // 30 seconds from now
+  }
 
   const { data: nightActions, error: naErr } = await client
     .from("night_actions")
@@ -789,7 +793,7 @@ async function renderNightPhase(lobby, players) {
     <div class="lobby-screen">
       <div class="character-detail-content">
         <h2>Night ${night}</h2>
-        <div id="night-timer" style="margin-bottom:10px;font-weight:bold;">60s</div>
+        <div id="night-timer" style="margin-bottom:10px;font-weight:bold;">30s</div>
 
         <div class="games-list">
           ${players.map((p, idx) =>
@@ -812,18 +816,22 @@ async function renderNightPhase(lobby, players) {
   if (window.nightTimerInterval) clearInterval(window.nightTimerInterval);
 
   window.nightTimerPaused = false;
+
   window.nightTimerInterval = setInterval(async () => {
     if (window.nightTimerPaused) return;
-    remaining -= 1;
+
+    const remaining = Math.max(0, Math.floor((window.nightEndsAt - Date.now()) / 1000));
+
     const el = document.getElementById("night-timer");
     if (el) el.textContent = `${remaining}s`;
 
     if (remaining <= 0) {
       clearInterval(window.nightTimerInterval);
       window.nightTimerInterval = null;
+      window.nightEndsAt = null; // reset for next night
       await advanceToNextDay(lobby.id);
     }
-  }, 1000);
+  }, 200); // 5 updates per second for smoothness
 }
 
 function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, players) {
@@ -930,7 +938,6 @@ async function advanceToNextDay(lobbyId) {
   // --- NIGHT RESOLUTION GOES HERE ---
   await resolveCultistConversion(lobbyId, nightNumber)
   await resolveMayorProsecutorReveal(lobbyId, nightNumber);
-  await resolveTrapperRestrictions(lobbyId, nightNumber);
 
   if (nextDay > 7) {
     await client.from("lobbies")
@@ -1741,6 +1748,7 @@ async function selectNightTarget(targetId) {
   }
 
   await resolveJailorRestrictions(lobbyId, nightNumber);
+  await resolveTrapperRestrictions(lobbyId, nightNumber);
 
   const { data: finalActions, error: finalErr } = await client
     .from("night_actions")
@@ -2208,6 +2216,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
