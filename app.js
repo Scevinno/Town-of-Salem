@@ -1612,14 +1612,16 @@ async function renderPlayerNight(lobby, player) {
   );
   highlightNightSelectionWithActions(myActionsThisNight);
 
-  // --- SYNCED NIGHT TIMER (NEW) ---
+  // --- SYNCED NIGHT TIMER ---
   if (window.playerNightTimerInterval) clearInterval(window.playerNightTimerInterval);
+
+  // Read the shared timestamp
+  window.nightEndsAt = Number(localStorage.getItem("nightEndsAt"));
 
   window.playerNightTimerInterval = setInterval(() => {
     const el = document.getElementById("night-timer");
     if (!el) return;
 
-    // If admin hasn't started timer yet
     if (!window.nightEndsAt) {
       el.textContent = "Night in progress...";
       return;
@@ -2239,6 +2241,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
