@@ -1861,12 +1861,15 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
 
   // Bodyguard
   if (roleName === "Bodyguard") {
+    if (target.id === me.id) return false;
     if (target.is_revealed) return false;
     return true;
   }
 
   // Vigilante
   if (roleName === "Vigilante") {
+    if (nightNumber === 1) return false;
+    if (target.id === me.id) return false;
     if (myActionsAll.length >= 1) return false;
     return true;
   }
@@ -2241,6 +2244,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
