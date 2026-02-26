@@ -1414,7 +1414,7 @@ function renderPlayerNightCardForPlayer(player, roleIndex, me, myRole, lobby, ro
   const canAct = visitsAllowed > 0 && !isMeInactive;
 
   // Roles that CAN target inactive players
-  const canTargetInactiveRoles = ["Retributionist", "Necromancer"];
+  const canTargetInactiveRoles = ["Retributionist", "Necromancer", "Assassin"];
   const allowInactiveTarget = canTargetInactiveRoles.includes(roleName);
 
   // Cultist: cannot act before Night 2
@@ -1796,6 +1796,7 @@ function canVisit(roleName) {
     "Witch": 2,
     "Seer": 2,
     "Necromancer": 2,
+    "Assassin": 2,
     "Veteran": 1,
     "Doctor": 1,
     "Trapper": 1,
@@ -1815,7 +1816,7 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
   const firstVisit = myActionsAll.find(a => a.visit_index === 0);
 
   // Roles that cannot act at all
-  const noVisit = ["Covenite", "Spy", "Executioner", "Jester"];
+  const noVisit = ["Covenite", "Spy", "Executioner", "Jester", "Archivist", "Outcast", "Innkeeper"];
   if (noVisit.includes(roleName)) return false;
 
   // --- SPECIAL ROLES FIRST ---
@@ -1925,6 +1926,13 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
     return true;
   }
 
+    // Assassin (merged logic)
+  if (roleName === "Assassin") {
+    if (target.id === me.id) return false;
+    if (firstVisit.target_player_id === target.id) return false;
+    return true;
+  }
+
   // Transporter (merged logic)
   if (roleName === "Transporter") {
     if (firstVisit && firstVisit.target_player_id === target.id) return false;
@@ -1951,7 +1959,7 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
   }
 
   // Mafia roles
-  const mafiaRoles = ["Godfather", "Mafioso", "Framer", "Bootlegger", "Consigliere", "Hypnotist"];
+  const mafiaRoles = ["Godfather", "Mafioso", "Framer", "Blackmailer", "Bootlegger", "Consigliere", "Hypnotist"];
   if (mafiaRoles.includes(roleName)) {
     if (targetFaction === "Mafia") return false;
   }
@@ -2244,6 +2252,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
