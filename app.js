@@ -430,7 +430,7 @@ function loadManageGames() {
 }
 
 function renderGameCard(game) {
-  const joinUrl = `${window.location.origin}?join=${game.code}`;
+  const joinUrl = `${window.location.origin}/Town-of-Salem/?join=${lobby.code}`;
 
   return `
     <div class="game-card">
@@ -2252,6 +2252,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
