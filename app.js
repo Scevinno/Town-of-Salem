@@ -431,6 +431,7 @@ function loadManageGames() {
 
 function renderGameCard(game) {
   const joinUrl = `${window.location.origin}?join=${game.code}`;
+  const urltest2 = `scevinno.github.io/Town-of-Salem/?join=${game.code}`;
 
   return `
     <div class="game-card">
@@ -439,7 +440,7 @@ function renderGameCard(game) {
       <p>Code: <b>${game.code}</b></p>
 
       <div class="qr-wrapper">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(joinUrl)}">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(urltest2)}">
       </div>
 
       <button class="bottom-action-btn" style="background:#22c55e;margin-top:10px;"
@@ -2252,4 +2253,5 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
