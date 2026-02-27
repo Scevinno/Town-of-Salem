@@ -430,7 +430,7 @@ function loadManageGames() {
 }
 
 function renderGameCard(game) {
-  const joinUrl = `${window.location.origin}?join=${lobby.code}`;
+  const joinUrl = `${window.location.origin}?join=${game.code}`;
 
   return `
     <div class="game-card">
@@ -2252,33 +2252,4 @@ window.addEventListener("load", () => {
   }
 
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
