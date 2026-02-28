@@ -1254,7 +1254,7 @@ async function renderPlayerDay(lobby, player) {
           My Role
         </button>
 
-        <button class="bottom-action-btn" style="background:#ef4444;" onclick="loadCharacterHome()">
+        <button class="bottom-action-btn" onclick="loadCharacterHome()">
           Back
         </button>
 
@@ -2257,6 +2257,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
