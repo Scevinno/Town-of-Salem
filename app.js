@@ -1271,9 +1271,6 @@ function canSeeRole(viewer, target) {
   const tFaction = target.characters.faction;
   const tRole = target.characters.name;
 
-  // Jailor is globally visible
-  if (tRole === "Jailor") return true;
-
   // Mayor & Prosecutor become globally visible after reveal
   if (target.is_revealed) return true;
 
@@ -1773,7 +1770,7 @@ async function selectNightTarget(targetId) {
     return;
   }
 
-  await resolveJailorRestrictions(lobbyId, nightNumber);
+  await resolveWardenRestrictions(lobbyId, nightNumber);
   await resolveTrapperRestrictions(lobbyId, nightNumber);
 
   const { data: finalActions, error: finalErr } = await client
@@ -1910,7 +1907,6 @@ function roleRestrictions(roleName, nightNumber, target, me, players, nightActio
   if (roleName === "Seer") {
     if (target.id === me.id) return false;
     if (target.is_revealed) return false;
-    if (target.characters?.role === "Jailor") return false;
     if (firstVisit && firstVisit.target_player_id === target.id) return false;
     return true;
   }
@@ -2022,7 +2018,7 @@ async function resolveCultistConversion(lobbyId, nightNumber) {
     const target = action.target;
 
     // Cannot convert non-Town OR protected Town roles
-    const blockedTownRoles = ["Jailor", "Mayor", "Prosecutor"];
+    const blockedTownRoles = ["Warden", "Mayor", "Prosecutor"];
 
     if (
       target.characters.faction !== "Town" ||
@@ -2044,7 +2040,7 @@ async function resolveCultistConversion(lobbyId, nightNumber) {
   }
 }
 
-async function resolveJailorRestrictions(lobbyId, nightNumber) {
+async function resolveWardenRestrictions(lobbyId, nightNumber) {
   // Load all actions up to this night
   const { data: allActions, error } = await client
     .from("night_actions")
@@ -2063,24 +2059,24 @@ async function resolveJailorRestrictions(lobbyId, nightNumber) {
     .order("night_number", { ascending: true });
 
   if (error) {
-    console.error("Jailor resolver failed:", error);
+    console.error("Warden resolver failed:", error);
     return;
   }
 
   if (!allActions) return;
 
-  // Find all Jailors
-  const jailors = allActions
+  // Find all Wardens
+  const wardens = allActions
     .map(a => a.actor)
-    .filter(a => a && a.characters?.name === "Jailor");
+    .filter(a => a && a.characters?.name === "Warden");
 
-  if (jailors.length === 0) return;
+  if (wardens.length === 0) return;
 
-  for (const jailor of jailors) {
-    const jailorId = jailor.id;
+  for (const warden of wardens) {
+    const wardenId = warden.id;
 
-    // All actions by this Jailor
-    const myActions = allActions.filter(a => a.player_id === jailorId);
+    // All actions by this Warden
+    const myActions = allActions.filter(a => a.player_id === wardenId);
 
     // Last two visits before this night
     const history = myActions.filter(a => a.night_number < nightNumber);
@@ -2089,15 +2085,15 @@ async function resolveJailorRestrictions(lobbyId, nightNumber) {
     const last = history[history.length - 1];
     const secondLast = history[history.length - 2];
 
-    // If Jailor visited the same target twice in a row
+    // If Warden visited the same target twice in a row
     if (
       last.target_player_id === secondLast.target_player_id
     ) {
       const forbiddenTarget = last.target_player_id;
 
-      // If Jailor tries to visit that target again this night → delete illegal action
+      // If Warden tries to visit that target again this night → delete illegal action
       const illegal = allActions.find(a =>
-        a.player_id === jailorId &&
+        a.player_id === wardenId &&
         a.night_number === nightNumber &&
         a.target_player_id === forbiddenTarget
       );
@@ -2253,6 +2249,7 @@ window.addEventListener("load", () => {
   }
 
 });
+
 
 
 
