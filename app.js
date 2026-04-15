@@ -597,12 +597,6 @@ async function launchNewGame() {
 }
 
 async function launchGame(lobbyId) {
-  // clear any previous night timer
-  if (window.nightTimerInterval) {
-    clearInterval(window.nightTimerInterval);
-    window.nightTimerInterval = null;
-  }
-
   const { data: lobbies, error: lobbyError } = await client
     .from("lobbies")
     .select("*")
@@ -634,8 +628,14 @@ async function launchGame(lobbyId) {
     lobby.phase = "day";
     lobby.day_number = 1;
     lobby.night_number = 0;
+
     await client.from("lobbies")
-      .update({ phase: "day", day_number: 1, night_number: 0, accepting_responses: false })
+      .update({
+        phase: "day",
+        day_number: 1,
+        night_number: 0,
+        accepting_responses: false
+      })
       .eq("id", lobbyId);
   }
 
@@ -645,6 +645,7 @@ async function launchGame(lobbyId) {
     renderNightPhase(lobby, players);
   }
 }
+
 
 async function renderDayPhase(lobby, players) {
   const day = lobby.day_number || 1;
@@ -870,6 +871,12 @@ function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, pla
           }).join("")}
         </div>
       </div>
+
+      <button class="bottom-action-btn"
+              style="margin-top:10px;background:#3b82f6"
+              onclick="adminActAsPlayer('${player.id}')">
+        Select Target as ${player.username}
+      </button>
 
       ${showButtons ? `
         <button class="bottom-action-btn"
@@ -1545,11 +1552,12 @@ async function renderPlayerNight(lobby, player) {
   window.mePlayerId = me.id;
   window.currentLobbyId = lobby.id;
 
+  // --- RENDER WITHOUT ANY TIMER ---
   document.getElementById("app").innerHTML = `
     <div class="lobby-screen">
       <div class="character-detail-content">
         <h2>Night ${lobby.night_number}</h2>
-        <div id="night-timer" style="font-weight:bold;margin-bottom:10px;">
+        <div style="font-weight:bold;margin-bottom:10px;">
           Night in progress...
         </div>
 
@@ -1582,31 +1590,13 @@ async function renderPlayerNight(lobby, player) {
   );
   highlightNightSelectionWithActions(myActionsThisNight);
 
-  // --- SYNCED NIGHT TIMER ---
-  if (window.playerNightTimerInterval) clearInterval(window.playerNightTimerInterval);
+  // --- REMOVE ALL TIMER LOGIC ---
+  // No intervals
+  // No countdown
+  // No nightEndsAt
+  // No syncing with admin timer
 
-  // Read the shared timestamp
-  window.nightEndsAt = Number(localStorage.getItem("nightEndsAt"));
-
-  window.playerNightTimerInterval = setInterval(() => {
-    const el = document.getElementById("night-timer");
-    if (!el) return;
-
-    if (!window.nightEndsAt) {
-      el.textContent = "Night in progress...";
-      return;
-    }
-
-    const remaining = Math.max(0, Math.floor((window.nightEndsAt - Date.now()) / 1000));
-    el.textContent = `Night in progress... (${remaining}s)`;
-
-    if (remaining <= 0) {
-      clearInterval(window.playerNightTimerInterval);
-      el.textContent = "Resolving...";
-    }
-  }, 200);
-  // --- END TIMER ---
-
+  // Still poll for phase change so players move to day when admin clicks "Go to Day"
   pollPhaseChange(lobby.id, lobby.phase);
 }
 
