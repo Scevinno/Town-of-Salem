@@ -778,6 +778,7 @@ async function goToNight(lobbyId) {
 
 async function renderNightPhase(lobby, players) {
   const night = lobby.night_number || 1;
+  window.currentLobbyId = lobby.id;
 
   // Load night actions
   const { data: nightActions, error: naErr } = await client
