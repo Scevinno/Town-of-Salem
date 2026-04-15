@@ -873,9 +873,9 @@ function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, pla
       </div>
 
       <button class="bottom-action-btn"
-              style="margin-top:10px;background:#3b82f6"
+              style="margin-top:10px;background:#22c55e"
               onclick="adminActAsPlayer('${player.id}')">
-        Select Target as ${player.username}
+        Select Target
       </button>
 
       ${showButtons ? `
@@ -898,6 +898,66 @@ function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, pla
 
     </div>
   `;
+}
+
+async function adminActAsPlayer(playerId) {
+  // Save admin identity
+  window.adminOriginalPlayerId = localStorage.getItem("playerId");
+
+  // Impersonate selected player
+  localStorage.setItem("playerId", playerId);
+
+  const lobbyId = window.currentLobbyId;
+
+  const { data: lobby } = await client
+    .from("lobbies")
+    .select("*")
+    .eq("id", lobbyId)
+    .single();
+
+  const { data: players } = await client
+    .from("players")
+    .select("*, characters(*)")
+    .eq("lobby_id", lobbyId);
+
+  const actingPlayer = players.find(p => p.id === playerId);
+
+  // Render the normal player night screen
+  renderPlayerNight(lobby, actingPlayer);
+
+  // Inject a Back button for admin
+  setTimeout(() => {
+    const actions = document.querySelector(".detail-actions");
+    if (actions) {
+      actions.innerHTML = `
+        <button class="bottom-action-btn" onclick="adminReturnFromActing()">
+          Back to Admin Night
+        </button>
+      `;
+    }
+  }, 50);
+}
+
+async function adminReturnFromActing() {
+  const adminId = window.adminOriginalPlayerId;
+  if (adminId) {
+    localStorage.setItem("playerId", adminId);
+  }
+
+  const lobbyId = window.currentLobbyId;
+
+  const { data: lobby } = await client
+    .from("lobbies")
+    .select("*")
+    .eq("id", lobbyId)
+    .single();
+
+  const { data: players } = await client
+    .from("players")
+    .select("*, characters(*)")
+    .eq("lobby_id", lobbyId);
+
+  renderNightPhase(lobby, players);
 }
 
 async function advanceToNextDay(lobbyId) {
