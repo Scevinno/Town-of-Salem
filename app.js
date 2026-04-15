@@ -778,11 +778,7 @@ async function goToNight(lobbyId) {
 async function renderNightPhase(lobby, players) {
   const night = lobby.night_number || 1;
 
-  // If timer not started yet, set the end time
-  if (!window.nightEndsAt) {
-    window.nightEndsAt = Date.now() + 30000; // 30 seconds from now
-  }
-
+  // Load night actions
   const { data: nightActions, error: naErr } = await client
     .from("night_actions")
     .select("*, target:target_player_id(username)")
@@ -794,7 +790,6 @@ async function renderNightPhase(lobby, players) {
     <div class="lobby-screen">
       <div class="character-detail-content">
         <h2>Night ${night}</h2>
-        <div id="night-timer" style="margin-bottom:10px;font-weight:bold;">30s</div>
 
         <div class="games-list">
           ${players.map((p, idx) =>
@@ -804,8 +799,8 @@ async function renderNightPhase(lobby, players) {
       </div>
 
       <div class="detail-actions">
-        <button class="bottom-action-btn" style="background:#f97316;" onclick="pauseNightTimer()">
-          Pause
+        <button class="bottom-action-btn" style="background:#22c55e;" onclick="advanceToNextDay('${lobby.id}')">
+          Go to Day
         </button>
         <button class="bottom-action-btn" onclick="loadManageGames()">
           Back to Manage Games
@@ -813,27 +808,8 @@ async function renderNightPhase(lobby, players) {
       </div>
     </div>
   `;
-
-  if (window.nightTimerInterval) clearInterval(window.nightTimerInterval);
-
-  window.nightTimerPaused = false;
-
-  window.nightTimerInterval = setInterval(async () => {
-    if (window.nightTimerPaused) return;
-
-    const remaining = Math.max(0, Math.floor((window.nightEndsAt - Date.now()) / 1000));
-
-    const el = document.getElementById("night-timer");
-    if (el) el.textContent = `${remaining}s`;
-
-    if (remaining <= 0) {
-      clearInterval(window.nightTimerInterval);
-      window.nightTimerInterval = null;
-      window.nightEndsAt = null; // reset for next night
-      await advanceToNextDay(lobby.id);
-    }
-  }, 200); // 5 updates per second for smoothness
 }
+
 
 function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, players) {
   const c = player.characters;
@@ -915,10 +891,6 @@ function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, pla
 
     </div>
   `;
-}
-
-function pauseNightTimer() {
-  window.nightTimerPaused = !window.nightTimerPaused;
 }
 
 async function advanceToNextDay(lobbyId) {
