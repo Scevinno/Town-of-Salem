@@ -872,11 +872,13 @@ function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, pla
         </div>
       </div>
 
-      <button class="bottom-action-btn"
-              style="margin-top:10px;background:#22c55e"
-              onclick="adminActAsPlayer('${player.id}')">
-        Select Target
-      </button>
+      ${!showButtons ? `
+        <button class="bottom-action-btn"
+                style="margin-top:10px;background:#22c55e"
+                onclick="adminActAsPlayer('${player.id}')">
+          Select Target
+        </button>
+      ` : ""}
 
       ${showButtons ? `
         <button class="bottom-action-btn"
