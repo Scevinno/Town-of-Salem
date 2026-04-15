@@ -907,25 +907,17 @@ async function adminActAsPlayer(playerId) {
   alert("adminActAsPlayer CALLED with playerId=" + playerId);
   console.log("adminActAsPlayer CALLED with playerId=", playerId);
 
-  playerId = Number(playerId);
-  alert("Converted playerId to number: " + playerId);
+  // UUIDs must stay strings
+  playerId = String(playerId);
 
-  // Save admin identity
   window.adminOriginalPlayerId = localStorage.getItem("playerId");
   alert("Saved adminOriginalPlayerId=" + window.adminOriginalPlayerId);
 
-  // Impersonate selected player
   localStorage.setItem("playerId", playerId);
   alert("localStorage.playerId is now " + localStorage.getItem("playerId"));
 
   const lobbyId = window.currentLobbyId;
   alert("currentLobbyId=" + lobbyId);
-
-  if (!lobbyId) {
-    alert("ERROR: lobbyId is missing!");
-    console.error("ERROR: lobbyId missing");
-    return;
-  }
 
   const { data: lobby, error: lobbyErr } = await client
     .from("lobbies")
@@ -934,8 +926,8 @@ async function adminActAsPlayer(playerId) {
     .single();
 
   if (lobbyErr || !lobby) {
-    alert("ERROR loading lobby: " + JSON.stringify(lobbyErr));
-    console.error("Lobby load error:", lobbyErr);
+    alert("ERROR loading lobby");
+    console.error(lobbyErr);
     return;
   }
 
@@ -947,8 +939,8 @@ async function adminActAsPlayer(playerId) {
     .eq("lobby_id", lobbyId);
 
   if (playersErr || !players) {
-    alert("ERROR loading players: " + JSON.stringify(playersErr));
-    console.error("Players load error:", playersErr);
+    alert("ERROR loading players");
+    console.error(playersErr);
     return;
   }
 
@@ -958,32 +950,15 @@ async function adminActAsPlayer(playerId) {
   alert("actingPlayer found? " + (actingPlayer ? "YES" : "NO"));
 
   if (!actingPlayer) {
-    alert("ERROR: actingPlayer NOT FOUND. Check ID types.");
-    console.error("actingPlayer not found. playerId=", playerId, "players=", players);
+    alert("ERROR: actingPlayer NOT FOUND");
+    console.error("actingPlayer not found", playerId, players);
     return;
   }
 
   alert("Calling renderPlayerNight...");
-
   renderPlayerNight(lobby, actingPlayer);
-
-  alert("renderPlayerNight CALLED");
-
-  // Inject a Back button for admin
-  setTimeout(() => {
-    const actions = document.querySelector(".detail-actions");
-    if (actions) {
-      alert("Back button injected");
-      actions.innerHTML = `
-        <button class="bottom-action-btn" onclick="adminReturnFromActing()">
-          Back to Admin Night
-        </button>
-      `;
-    } else {
-      alert("ERROR: .detail-actions not found");
-    }
-  }, 50);
 }
+
 
 async function adminReturnFromActing() {
   const adminId = window.adminOriginalPlayerId;
