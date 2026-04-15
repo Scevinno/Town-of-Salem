@@ -904,10 +904,9 @@ function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, pla
 }
 
 async function adminActAsPlayer(playerId) {
-  // Save admin identity
-  window.adminOriginalPlayerId = localStorage.getItem("playerId");
+  playerId = Number(playerId);   // <-- FIX
 
-  // Impersonate selected player
+  window.adminOriginalPlayerId = localStorage.getItem("playerId");
   localStorage.setItem("playerId", playerId);
 
   const lobbyId = window.currentLobbyId;
@@ -925,10 +924,13 @@ async function adminActAsPlayer(playerId) {
 
   const actingPlayer = players.find(p => p.id === playerId);
 
-  // Render the normal player night screen
+  if (!actingPlayer) {
+    console.error("Admin impersonation failed: actingPlayer not found", playerId, players);
+    return;
+  }
+
   renderPlayerNight(lobby, actingPlayer);
 
-  // Inject a Back button for admin
   setTimeout(() => {
     const actions = document.querySelector(".detail-actions");
     if (actions) {
