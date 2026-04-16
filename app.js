@@ -904,59 +904,53 @@ function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, pla
 }
 
 async function adminActAsPlayer(playerId) {
-  alert("adminActAsPlayer CALLED with playerId=" + playerId);
-  console.log("adminActAsPlayer CALLED with playerId=", playerId);
-
   // UUIDs must stay strings
   playerId = String(playerId);
 
+  // Save admin identity
   window.adminOriginalPlayerId = localStorage.getItem("playerId");
-  alert("Saved adminOriginalPlayerId=" + window.adminOriginalPlayerId);
 
+  // Impersonate selected player
   localStorage.setItem("playerId", playerId);
-  alert("localStorage.playerId is now " + localStorage.getItem("playerId"));
 
   const lobbyId = window.currentLobbyId;
-  alert("currentLobbyId=" + lobbyId);
+  if (!lobbyId) return;
 
+  // Load lobby
   const { data: lobby, error: lobbyErr } = await client
     .from("lobbies")
     .select("*")
     .eq("id", lobbyId)
     .single();
 
-  if (lobbyErr || !lobby) {
-    alert("ERROR loading lobby");
-    console.error(lobbyErr);
-    return;
-  }
+  if (lobbyErr || !lobby) return;
 
-  alert("Lobby loaded OK");
-
+  // Load players
   const { data: players, error: playersErr } = await client
     .from("players")
     .select("*, characters(*)")
     .eq("lobby_id", lobbyId);
 
-  if (playersErr || !players) {
-    alert("ERROR loading players");
-    console.error(playersErr);
-    return;
-  }
+  if (playersErr || !players) return;
 
-  alert("Players loaded: " + players.length);
-
+  // Find acting player
   const actingPlayer = players.find(p => p.id === playerId);
-  alert("actingPlayer found? " + (actingPlayer ? "YES" : "NO"));
+  if (!actingPlayer) return;
 
-  if (!actingPlayer) {
-    alert("ERROR: actingPlayer NOT FOUND");
-    console.error("actingPlayer not found", playerId, players);
-    return;
-  }
-
-  alert("Calling renderPlayerNight...");
+  // Render the normal player night screen
   renderPlayerNight(lobby, actingPlayer);
+
+  // Inject a Back button for admin
+  setTimeout(() => {
+    const actions = document.querySelector(".detail-actions");
+    if (actions) {
+      actions.innerHTML = `
+        <button class="bottom-action-btn" onclick="adminReturnFromActing()">
+          Back to Admin Night
+        </button>
+      `;
+    }
+  }, 50);
 }
 
 
