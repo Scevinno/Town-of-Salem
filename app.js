@@ -904,53 +904,31 @@ function renderAdminPlayerCard(player, roleIndex, nightActions, showButtons, pla
 }
 
 async function adminActAsPlayer(playerId) {
-  // UUIDs must stay strings
   playerId = String(playerId);
 
-  // Save admin identity
   window.adminOriginalPlayerId = localStorage.getItem("playerId");
+  window.isAdminImpersonating = true;
 
-  // Impersonate selected player
   localStorage.setItem("playerId", playerId);
 
   const lobbyId = window.currentLobbyId;
   if (!lobbyId) return;
 
-  // Load lobby
-  const { data: lobby, error: lobbyErr } = await client
+  const { data: lobby } = await client
     .from("lobbies")
     .select("*")
     .eq("id", lobbyId)
     .single();
 
-  if (lobbyErr || !lobby) return;
-
-  // Load players
-  const { data: players, error: playersErr } = await client
+  const { data: players } = await client
     .from("players")
     .select("*, characters(*)")
     .eq("lobby_id", lobbyId);
 
-  if (playersErr || !players) return;
-
-  // Find acting player
   const actingPlayer = players.find(p => p.id === playerId);
   if (!actingPlayer) return;
 
-  // Render the normal player night screen
   renderPlayerNight(lobby, actingPlayer);
-
-  // Inject a Back button for admin
-  setTimeout(() => {
-    const actions = document.querySelector(".detail-actions");
-    if (actions) {
-      actions.innerHTML = `
-        <button class="bottom-action-btn" onclick="adminReturnFromActing()">
-          Back to Admin Night
-        </button>
-      `;
-    }
-  }, 50);
 }
 
 
@@ -959,6 +937,8 @@ async function adminReturnFromActing() {
   if (adminId) {
     localStorage.setItem("playerId", adminId);
   }
+
+  window.isAdminImpersonating = false;
 
   const lobbyId = window.currentLobbyId;
 
@@ -1652,10 +1632,15 @@ async function renderPlayerNight(lobby, player) {
           ).join("")}
         </div>
       </div>
-
       <div class="detail-actions">
-        <button class="bottom-action-btn" onclick="renderMyRole()">My Role</button>
-        <button class="bottom-action-btn" style="background:#ef4444;" onclick="leaveGame()">Leave</button>
+        ${
+          window.isAdminImpersonating
+            ? `<button class="bottom-action-btn" onclick="adminReturnFromActing()">Back to Admin Night</button>`
+            : `
+                <button class="bottom-action-btn" onclick="renderMyRole()">My Role</button>
+                <button class="bottom-action-btn" style="background:#ef4444;" onclick="leaveGame()">Leave</button>
+              `
+        }
       </div>
     </div>
   `;
@@ -1665,12 +1650,6 @@ async function renderPlayerNight(lobby, player) {
     a.player_id === me.id && a.night_number === lobby.night_number
   );
   highlightNightSelectionWithActions(myActionsThisNight);
-
-  // --- REMOVE ALL TIMER LOGIC ---
-  // No intervals
-  // No countdown
-  // No nightEndsAt
-  // No syncing with admin timer
 
   // Still poll for phase change so players move to day when admin clicks "Go to Day"
   pollPhaseChange(lobby.id, lobby.phase);
