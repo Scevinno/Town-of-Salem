@@ -934,8 +934,12 @@ async function adminActAsPlayer(playerId) {
 
 async function adminReturnFromActing() {
   const adminId = window.adminOriginalPlayerId;
+
+  // Restore or clear playerId so we are no longer any player
   if (adminId) {
     localStorage.setItem("playerId", adminId);
+  } else {
+    localStorage.removeItem("playerId");
   }
 
   window.isAdminImpersonating = false;
@@ -955,18 +959,6 @@ async function adminReturnFromActing() {
 
   renderNightPhase(lobby, players);
 }
-
-async function advanceToNextDay(lobbyId) {
-  const { data: lobby, error } = await client
-    .from("lobbies")
-    .select("*")
-    .eq("id", lobbyId)
-    .single();
-
-  if (error || !lobby) {
-    console.error(error);
-    return;
-  }
 
   const nightNumber = lobby.night_number;   // <-- needed for resolution
   const nextDay = (lobby.day_number || 1) + 1;
