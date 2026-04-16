@@ -972,24 +972,11 @@ async function advanceToNextDay(lobbyId) {
     return;
   }
 
-  const nightNumber = lobby.night_number;
+  const nightNumber = lobby.night_number;   // <-- needed for resolution
   const nextDay = (lobby.day_number || 1) + 1;
 
-  if (!window.isAdminImpersonating) {
-    await client.from("lobbies")
-      .update({
-        phase: "day",
-        day_number: nextDay,
-        accepting_responses: false
-      })
-      .eq("id", lobbyId);
-
-    loadManageGames();
-    return;
-  }
-
-  // --- NIGHT RESOLUTION ---
-  await resolveCultistConversion(lobbyId, nightNumber);
+  // --- NIGHT RESOLUTION GOES HERE ---
+  await resolveCultistConversion(lobbyId, nightNumber)
   await resolveMayorProsecutorReveal(lobbyId, nightNumber);
 
   if (nextDay > 7) {
